@@ -3,51 +3,48 @@ import fs from 'fs';
 import glob from 'glob';
 import _ from 'lodash';
 import path from 'path';
-const tpl = _.template(fs.readFileSync('bin/modGen.tpl').toString());
-
-const reCommentAfter = /function[\s]*([\w]*)[\s]*\(([^\(\)\{\}]*)\)[\s]*{[\s]*\/\/[\s]*(?:angular|ng)[\s]*(component|directive|(?:component|directive) controller|controller|service|factory|provider|config|filter)(?: *\[(\d+)\])?/m;
-const reCommentBefore = /[\s]*(?:export default class[\s]*([\w]*)[^]+)?\/\/[\s]*(?:angular|ng)[\s]*(component|directive|(?:component|directive) controller|controller|service|factory|provider|config|filter)(?: *\[(\d+)\])?[\s]*(?:return[\s]*)?(?:function|constructor)[\s]*([\w]*)[\s]*\(([^\(\)\{\}]*)\)[\s]*{/m;
-const reCommentBeforeTS = /\/\/[\s]*(?:angular|ng)[\s]*(component|directive|(?:component|directive) controller|controller|service|factory|provider|config|filter)(?: *\[(\d+)\])?[\s]*(?:export default (?:class|function)[\s]*([\w]*)[\s]*)(?:[^]+constructor[\s]*)?\(([^\(\)\{\}]*)\)/m;
-const reCommentBeforeClassVueTS = /\/\/[\s]*(?:angular|ng)[\s]*(vue component)(?: *\[(\d+)\])?[\s]*@Component()/;
+import { reCommentAfter, reCommentBeforeClassVueTS, reCommentBeforeTS, stripComments } from './matchers';
+const tplText = fs.readFileSync(path.resolve(__dirname, 'tpl', 'modGen.tpl')).toString();
+const tpl = _.template(tplText);
 
 // allow running as a script, e.g. `node modGen.js some/path`
-if (require.main === module) { exec(process.argv[2]); }
+if (require.main === module) { processDirectory(process.argv[2]); }
+
+export function findInDirectory(baseDir: string, options?: {verbosity?: number}) {
+    const modules = glob.sync(baseDir + '/**/module.config.ts');
+    return modules.map(modFile => {
+        if (options.verbosity >= 2) {
+            console.log(" Loading", modFile);
+        }
+        const modPath = '../' + modFile;
+        const mod: moduleDef = _.clone(require(modPath));
+        delete require.cache[require.resolve(modPath)];
+        for (let dep of mod.dependencies) {
+            (<any>dep).__modname__ = (<any>dep).modname ? (`"${(<any>dep).modname}"`) : dep.varname;
+        }
+        mod.path = path.dirname(modFile);
+        return mod;
+    });
+}
 
 // Options for verbosity:
 // 0 = completely silent
 // 1 = print a summary
 // 2 = list each module encountered
 // 3 = list each file encountered within a module
-function exec(baseDir: string, options?: {verbosity?: number}) {
-    options = _.defaults(options || {}, {verbosity: 9});
-    const modules = glob.sync(baseDir + '/**/module.config.ts');
-    for (let modFile of modules) {
+function processDirectory(baseDir: string, options?: {verbosity?: number}) {
+    const allMods = findInDirectory(baseDir, options);
+    for (let mod of allMods) {
         if (options.verbosity >= 2) {
-            console.log(" Loading", modFile);
+            console.log(" Loading", mod.path);
         }
-        const modPath = '../' + modFile;
-        const mod: any = _.clone(require(modPath));
-        delete require.cache[require.resolve(modPath)];
-        for (let dep of mod.dependencies) {
-            dep.__modname__ = dep.modname ? (`"${dep.modname}"`) : dep.varname;
-        }
-        mod.path = path.dirname(modFile);
         makeModule(mod, options.verbosity);
     }
     if (options.verbosity >= 1) {
-        console.log("Modules processed: %s", modules.length);
+        console.log("Modules processed: %s", allMods.length);
     }
 }
 
-
-const reComments = new RegExp('^\\s*(?://|/\\*.*\\*/).*$\\n?', 'm');
-// strips simple single-line comments from a multiline string
-function stripComments(str: string) {
-    while (reComments.test(str)) {
-        str = str.replace(reComments, '');
-    }
-    return str;
-}
 
 interface FilenameInfoStuff {
     filename: string;
@@ -61,7 +58,30 @@ interface FilenameInfoStuff {
     $inject?: string;
 }
 
-function makeModule(mod: any, verbosity: number) {
+/**
+ * Module definition, this is the export type of module.tpl.ts
+ */
+export interface moduleDef {
+    /** Path to the directory of the module (where module.tpl.ts resides) */
+    path: string;
+    /** name of the module; the module will return this value */
+    name: string;
+    /** Array of dependencies for this module, added to the  */
+    dependencies: moduleDependency[];
+}
+interface moduleDependency {
+    file: string;
+    varname: string;
+    angular?: boolean;
+}
+
+function writeModule(mod: moduleDef, verbosity: number) {
+    const moduleFileTxt = makeModule(mod, verbosity);
+
+    fs.writeFileSync(`${mod.path}/module.ts`, moduleFileTxt, {flag:'w'});
+}
+
+function makeModule(mod: moduleDef, verbosity: number) {
     let tsFiles = glob.sync('**/*{.ts,.js}', {cwd:mod.path});
         // we want both '.tpl.html' and '.jst' files registered with angular's templateCache
     let tplFiles = glob.sync('**/*{.tpl.html,.jst}', {cwd:mod.path});
@@ -118,7 +138,7 @@ function makeModule(mod: any, verbosity: number) {
             ret.type = 'vue component';
             //ret.order
         // tslint:disable-next-line: no-conditional-assignment
-        } else if ((functionPartMatches = reCommentBefore.exec(file))) {
+        } else if ((functionPartMatches = reCommentBeforeTS.exec(file))) {
             ret.type = functionPartMatches.splice(2, 1)[0];
             ret.order = functionPartMatches.splice(2, 1)[0];
             functionPartMatches.splice( functionPartMatches[1] ? 2 : 1, 1);
@@ -171,7 +191,19 @@ function makeModule(mod: any, verbosity: number) {
     fileObjs = fileObjs.concat(tplObjs);
 
 //    console.log("fileObjs: ", fileObjs);
-    fs.writeFileSync(mod.path + '/module.ts', tpl({fileObjs: fileObjs, tplObjs: tplObjs, modName: mod.name, modPath: mod.path, deps: mod.dependencies, modTpl: modTpl}), {flag:'w'});
+    const moduleTxt = tpl({
+        modName: mod.name,
+        modPath: mod.path,
+        deps: mod.dependencies,
+        fileObjs,
+        tplObjs,
+        modTpl,
+    });
+    return moduleTxt;
 }
 
-export = exec;
+export {
+    processDirectory,
+    writeModule,
+    makeModule,
+}
