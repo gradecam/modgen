@@ -37,7 +37,7 @@ function processDirectory(baseDir: string, options?: {verbosity?: number}) {
         if (options.verbosity >= 2) {
             console.log(" Loading", mod.path);
         }
-        makeModule(mod, options.verbosity);
+        writeModule(mod, options.verbosity);
     }
     if (options.verbosity >= 1) {
         console.log("Modules processed: %s", allMods.length);
