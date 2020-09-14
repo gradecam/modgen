@@ -16,9 +16,8 @@ export function findInDirectory(baseDir: string, options?: {verbosity?: number})
         if (options.verbosity >= 2) {
             console.log(" Loading", modFile);
         }
-        const modPath = '../' + modFile;
-        const mod: moduleDef = _.clone(require(modPath));
-        delete require.cache[require.resolve(modPath)];
+        const mod: moduleDef = _.clone(require(`${modFile}`));
+        delete require.cache[require.resolve(`${modFile}`)];
         for (let dep of mod.dependencies) {
             (<any>dep).__modname__ = (<any>dep).modname ? (`"${(<any>dep).modname}"`) : dep.varname;
         }

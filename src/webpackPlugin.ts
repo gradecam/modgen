@@ -1,6 +1,6 @@
 
 import path from 'path';
-import type webpack from 'webpack';
+import webpack from 'webpack';
 import { findInDirectory, makeModule } from './modGen';
 
 export interface ModGenPluginOptions {
@@ -17,7 +17,7 @@ export class ModGenPlugin {
         this.basePath = options.basePath;
     }
     apply(compiler: webpack.Compiler) {
-        compiler.hooks.beforeCompile.tap('ModGenPlugin', (compilation: webpack.compilation.Compilation, cb) => {
+        compiler.hooks.thisCompilation.tap('ModGenPlugin', (compilation, cb) => {
             const modList = findInDirectory(this.basePath, {verbosity: this.verbosity});
             for (let mod of modList) {
                 const outfileName = path.join(mod.path, 'module.ts');
