@@ -1,7 +1,6 @@
 
-import path from 'path';
 import webpack from 'webpack';
-import { findInDirectory, makeModule } from './modGen';
+import { processDirectory } from './modGen';
 
 export interface ModGenPluginOptions {
     verbosity?: number;
@@ -17,16 +16,8 @@ export class ModGenPlugin {
         this.basePath = options.basePath;
     }
     apply(compiler: webpack.Compiler) {
-        compiler.hooks.thisCompilation.tap('ModGenPlugin', (compilation, cb) => {
-            const modList = findInDirectory(this.basePath, {verbosity: this.verbosity});
-            for (let mod of modList) {
-                const outfileName = path.join(mod.path, 'module.ts');
-                const fileContents = makeModule(mod, this.verbosity);
-                compilation.assets[outfileName] = {
-                    source() { return fileContents; },
-                    size() { return fileContents.length; },
-                };
-            }
+        compiler.hooks.beforeCompile.tap('ModGenPlugin', (compilation, cb) => {
+            processDirectory(this.basePath, {verbosity: this.verbosity});
         });
     }
 }

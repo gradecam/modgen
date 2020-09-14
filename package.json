@@ -8,7 +8,9 @@
     "prepublishOnly": "tsc -p . && cp -av src/tpl dist/",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "files": ["dist/*"],
+  "files": [
+    "dist/*"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gradecam/modgen.git"
