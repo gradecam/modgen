@@ -14,7 +14,7 @@ import * as ng from 'angular';
 
 const moduleName = '<%= modName %>';
 export default moduleName;
-const mod = ng.module(moduleName, [<%= (deps||[]).filter(d => !!d.angular).map(d => d.__modname__).join(', ') %>]);
+const mod = ng.module(moduleName, [<%= (deps||[]).filter(d => !!d.angular).map(d => `${d.__modname__}.default || ${d.__modname__}`).join(', ') %>]);
 
 <% print(modTpl) %>
 <% _.each(fileObjs, function(fobj) { if (fobj.$inject && fobj.$inject.length > 0) { %>(<%= fobj.regObj %>.default || <%= fobj.regObj %>).$inject=[<%= fobj.$inject %>];
