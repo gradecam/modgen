@@ -3,7 +3,7 @@ import fs from 'fs';
 import glob from 'glob';
 import _ from 'lodash';
 import path from 'path';
-import { reCommentAfter, reCommentBeforeClassVueTS, reCommentBeforeTS, stripComments } from './matchers';
+import { reCommentAfter, reCommentBefore, reCommentBeforeClassVueTS, reCommentBeforeTS, stripComments } from './matchers';
 const tplText = fs.readFileSync(path.resolve(__dirname, 'tpl', 'modGen.tpl')).toString();
 const tpl = _.template(tplText);
 
@@ -137,7 +137,7 @@ function makeModule(mod: moduleDef, verbosity: number) {
             ret.type = 'vue component';
             //ret.order
         // tslint:disable-next-line: no-conditional-assignment
-        } else if ((functionPartMatches = reCommentBeforeTS.exec(file))) {
+        } else if ((functionPartMatches = reCommentBefore.exec(file))) {
             ret.type = functionPartMatches.splice(2, 1)[0];
             ret.order = functionPartMatches.splice(2, 1)[0];
             functionPartMatches.splice( functionPartMatches[1] ? 2 : 1, 1);
