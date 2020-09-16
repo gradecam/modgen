@@ -108,7 +108,7 @@ function makeModule(mod: moduleDef, verbosity: number) {
             varname = fname.replace(/[^a-zA-Z_]/g, '_');
             fname = f;
             // jst files don't survive requirejs-html optimization
-            plugin = match[0].substr(-4) === '.jst' ? 'text-loader!' : 'html-loader!';
+            // plugin = match[0].substr(-4) === '.jst' ? 'text-loader!' : 'html-loader!';
         }
         let i = 1;
         let tmp = varname;
