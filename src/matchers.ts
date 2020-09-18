@@ -1,4 +1,5 @@
 
+export const modGenIgnoreComment = /\/(\/|\*+)[\s]*modGen[:\s]ignore/;
 export const reCommentAfter = /function[\s]*([\w]*)[\s]*\(([^\(\)\{\}]*)\)[\s]*{[\s]*\/\/[\s]*(?:angular|ng)[\s]*(component|directive|(?:component|directive) controller|controller|service|factory|provider|config|filter)(?: *\[(\d+)\])?/m;
 export const reCommentBefore = /[\s]*(?:export default class[\s]*([\w]*)[^]+)?\/\/[\s]*(?:angular|ng)[\s]*(component|directive|(?:component|directive) controller|controller|service|factory|provider|config|filter)(?: *\[(\d+)\])?[\s]*(?:return[\s]*)?(?:function|constructor)[\s]*([\w]*)[\s]*\(([^\(\)\{\}]*)\)[\s]*{/m;
 export const reCommentBeforeTS = /\/\/[\s]*(?:angular|ng)[\s]*(component|directive|(?:component|directive) controller|controller|service|factory|provider|config|filter)(?: *\[(\d+)\])?[\s]*(?:export default (?:class|function)[\s]*([\w]*)[\s]*)(?:[^]+constructor[\s]*)?\(([^\(\)\{\}]*)\)/m;

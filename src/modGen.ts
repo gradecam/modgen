@@ -3,7 +3,7 @@ import fs from 'fs';
 import glob from 'glob';
 import _ from 'lodash';
 import path from 'path';
-import { reCommentAfter, reCommentBefore, reCommentBeforeClassVueTS, reCommentBeforeTS, stripComments } from './matchers';
+import { modGenIgnoreComment, reCommentAfter, reCommentBefore, reCommentBeforeClassVueTS, reCommentBeforeTS, stripComments } from './matchers';
 const tplText = fs.readFileSync(path.resolve(__dirname, 'tpl', 'modGen.tpl')).toString();
 const tpl = _.template(tplText);
 
@@ -131,6 +131,10 @@ function makeModule(mod: moduleDef, options?: ModGenOptions) {
 
         const absPath = path.join(mod.path, f);
         const file = fs.readFileSync(absPath).toString();
+        if (modGenIgnoreComment.exec(file)) {
+            ret.type = 'ignore';
+            return ret;
+        }
         let functionPartMatches: RegExpExecArray;
         // tslint:disable-next-line: no-conditional-assignment
         if ((functionPartMatches = reCommentBeforeTS.exec(file))) {
@@ -185,7 +189,7 @@ function makeModule(mod: moduleDef, options?: ModGenOptions) {
 
     // add each group in the right order
     let fileObjs = orderedGroups.reduce(
-        (modList, type) => modList.concat(fileGroups[type]),
+        (modList, type) => modList.concat(type === 'ignore' ? [] : fileGroups[type]),
         [] as FilenameInfoStuff[]
     );
 
