@@ -4,6 +4,7 @@ export {
     writeModule,
     makeModule,
     processDirectory,
+    ModGenOptions,
 } from './modGen';
 
 export {

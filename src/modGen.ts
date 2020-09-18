@@ -10,7 +10,7 @@ const tpl = _.template(tplText);
 // allow running as a script, e.g. `node modGen.js some/path`
 if (require.main === module) { processDirectory(process.argv[2]); }
 
-export function findInDirectory(baseDir: string, options?: {verbosity?: number}) {
+export function findInDirectory(baseDir: string, options?: ModGenOptions) {
     const modules = glob.sync(baseDir + '/**/module.config.ts');
     return modules.map(modFile => {
         if (options.verbosity >= 2) {
@@ -31,19 +31,23 @@ export function findInDirectory(baseDir: string, options?: {verbosity?: number})
 // 1 = print a summary
 // 2 = list each module encountered
 // 3 = list each file encountered within a module
-function processDirectory(baseDir: string, options?: {verbosity?: number}) {
+function processDirectory(baseDir: string, options?: ModGenOptions) {
     const allMods = findInDirectory(baseDir, options);
     for (let mod of allMods) {
         if (options.verbosity >= 2) {
             console.log(" Loading", mod.path);
         }
-        writeModule(mod, options.verbosity);
+        writeModule(mod, options);
     }
     if (options.verbosity >= 1) {
         console.log("Modules processed: %s", allMods.length);
     }
 }
 
+export interface ModGenOptions {
+    /** Should we add requirejs plugin prefixes for importing. 'text!' for jst and 'html!' for html files */
+    verbosity?: number;
+}
 
 interface FilenameInfoStuff {
     filename: string;
@@ -74,13 +78,13 @@ interface moduleDependency {
     angular?: boolean;
 }
 
-function writeModule(mod: moduleDef, verbosity: number) {
-    const moduleFileTxt = makeModule(mod, verbosity);
+function writeModule(mod: moduleDef, options?: ModGenOptions) {
+    const moduleFileTxt = makeModule(mod, options);
 
     fs.writeFileSync(`${mod.path}/module.ts`, moduleFileTxt, {flag:'w'});
 }
 
-function makeModule(mod: moduleDef, verbosity: number) {
+function makeModule(mod: moduleDef, options?: ModGenOptions) {
     let tsFiles = glob.sync('**/*{.ts,.js}', {cwd:mod.path});
         // we want both '.tpl.html' and '.jst' files registered with angular's templateCache
     let tplFiles = glob.sync('**/*{.tpl.html,.jst}', {cwd:mod.path});
@@ -120,7 +124,7 @@ function makeModule(mod: moduleDef, verbosity: number) {
         return {filename: f.split('/').pop(), fname: fname, varname: varname, plugin: plugin};
     }
     const fileGroups: _.Dictionary<FilenameInfoStuff[]> = _.groupBy(tsFiles.map(f => {
-        if (verbosity >= 3) {
+        if (options.verbosity >= 3) {
             console.log("  ▪", f);
         }
         const ret = getVarnameEtAl(f);
