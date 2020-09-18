@@ -135,7 +135,6 @@ function makeModule(mod: moduleDef, verbosity: number) {
         // tslint:disable-next-line: no-conditional-assignment
         } else if (functionPartMatches = reCommentBeforeClassVueTS.exec(file)) {
             ret.type = 'vue component';
-            //ret.order
         // tslint:disable-next-line: no-conditional-assignment
         } else if ((functionPartMatches = reCommentBefore.exec(file))) {
             ret.type = functionPartMatches.splice(2, 1)[0];
