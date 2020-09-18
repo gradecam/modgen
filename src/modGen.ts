@@ -11,7 +11,7 @@ const tpl = _.template(tplText);
 if (require.main === module) { processDirectory(process.argv[2]); }
 
 export function findInDirectory(baseDir: string, options?: ModGenOptions) {
-    const modules = glob.sync(baseDir + '/**/module.config.ts');
+    const modules = glob.sync(baseDir + '/**/module.config.+(js|json|ts)');
     return modules.map(modFile => {
         if (options.verbosity >= 2) {
             console.log(" Loading", modFile);
