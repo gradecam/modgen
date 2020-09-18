@@ -46,6 +46,7 @@ function processDirectory(baseDir: string, options?: ModGenOptions) {
 
 export interface ModGenOptions {
     /** Should we add requirejs plugin prefixes for importing. 'text!' for jst and 'html!' for html files */
+    addPluginPrefix?: boolean;
     verbosity?: number;
 }
 
@@ -112,7 +113,9 @@ function makeModule(mod: moduleDef, options?: ModGenOptions) {
             varname = fname.replace(/[^a-zA-Z_]/g, '_');
             fname = f;
             // jst files don't survive requirejs-html optimization
-            // plugin = match[0].substr(-4) === '.jst' ? 'text-loader!' : 'html-loader!';
+            if (options.addPluginPrefix) {
+                plugin = match[0].substr(-4) === '.jst' ? 'text!' : 'html!';
+            }
         }
         let i = 1;
         let tmp = varname;
