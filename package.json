@@ -3,6 +3,7 @@
   "version": "1.0.4",
   "description": "Automatic module generator for AngularJS / Typescript -- automates DI",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p . && cp -av src/tpl dist/",
     "prepublishOnly": "tsc -p . && cp -av src/tpl dist/",
