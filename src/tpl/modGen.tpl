@@ -28,7 +28,7 @@ switch(fobj.type) {
     case 'directive controller': %>
     .directive('<%= fobj.regName %>', <%= fobj.regObj %>.default?.$$$directive$$$ ?? <%=fobj.regObj %>.$$$directive$$$)<% break;
     case 'vue component': %>
-    .value('<%= fobj.regName %>', <%= fobj.regObj %>.default ?? <%= fobj.regObj %> )<% break;
+    .value('<%= fobj.regName %>', <%= fobj.regObj %>.default ?? <%= fobj.regObj %>)<% break;
     case 'config': %>
     .<%= fobj.type %>(<%= fobj.regObj %>.default ?? <%= fobj.regObj %>)<% break;
     default: %>
