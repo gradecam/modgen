@@ -3,7 +3,7 @@ import fs from 'fs';
 import glob from 'glob';
 import _ from 'lodash';
 import path from 'path';
-import { modGenIgnoreComment, reCommentAfter, reCommentBefore, reCommentBeforeTS, stripComments } from './matchers';
+import { modGenIgnoreComment, reCommentAfter, reCommentBeforeConstructor, reCommentBeforeFunction, reCommentBeforeTS, reContainsModgenComment, stripComments } from './matchers';
 const tplText = fs.readFileSync(path.resolve(__dirname, 'tpl', 'modGen.tpl')).toString();
 const tpl = _.template(tplText);
 
@@ -139,34 +139,43 @@ function makeModule(mod: moduleDef, options?: ModGenOptions) {
             return ret;
         }
         let functionPartMatches: RegExpExecArray;
-        // tslint:disable-next-line: no-conditional-assignment
+        let parsedRegName: string;
+        let injectionString: string;
         if ((functionPartMatches = reCommentBeforeTS.exec(file))) {
-            ret.type = functionPartMatches.splice(1, 1)[0];
-            ret.order = functionPartMatches.splice(1, 1)[0];
-        // tslint:disable-next-line: no-conditional-assignment
-        } else if ((functionPartMatches = reCommentBefore.exec(file))) {
-            ret.type = functionPartMatches.splice(2, 1)[0];
-            ret.order = functionPartMatches.splice(2, 1)[0];
-            functionPartMatches.splice( functionPartMatches[1] ? 2 : 1, 1);
-        // tslint:disable-next-line: no-conditional-assignment
+            ret.type = functionPartMatches[1];
+            ret.order = functionPartMatches[2];
+            parsedRegName = functionPartMatches[3];
+            injectionString = functionPartMatches[4];
+        } else if ((functionPartMatches = reCommentBeforeConstructor.exec(file))) {
+            parsedRegName = functionPartMatches[1];
+            ret.type = functionPartMatches[2];
+            ret.order = functionPartMatches[3];
+            injectionString = functionPartMatches[4];
+        } else if ((functionPartMatches = reCommentBeforeFunction.exec(file))) {
+            ret.type = functionPartMatches[1];
+            ret.order = functionPartMatches[2];
+            parsedRegName = functionPartMatches[3];
+            injectionString = functionPartMatches[4];
         } else if ((functionPartMatches = reCommentAfter.exec(file))) {
-            ret.order = functionPartMatches.pop();
-            ret.type = functionPartMatches.pop();
+            parsedRegName = functionPartMatches[1];
+            injectionString = functionPartMatches[2];
+            ret.type = functionPartMatches[3];
+            ret.order = functionPartMatches[4];
         } else {
+            let fileHasModGenComment = reContainsModgenComment.exec(file);
+            if (!!fileHasModGenComment) {
+                console.warn(`\x1b[33m${ret.filename}\x1b[0m contains modGen comment '\x1b[36m${fileHasModGenComment[0]}\x1b[0m', but modGen did not parse it correctly`);
+            }
             return ret;
         }
         ret.order = Number(ret.order) || Infinity; // sometimes a file needs to be ordered by more than just its name
         ret.regObj = ret.varname;
-        ret.regName = ret.varname;
+        ret.regName = parsedRegName || ret.varname;
 
-        if(functionPartMatches[1]) {
-            ret.regName = functionPartMatches[1];
-        }
-
-        const fargs = (functionPartMatches[2]||'').split(',').map(arg => {
+        const fargs = (injectionString||'').split(',').map(arg => {
             arg=arg.trim();
             arg = arg.replace(/^\S*(public|private|protected) /, '');
-            arg = arg.replace(/:.+(,|$)/i, '');
+            arg = arg.split(':')[0];
             if(!arg.length || arg === 'this') { return null; }
             return `'${arg}'`;
         });
