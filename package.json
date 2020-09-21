@@ -1,6 +1,6 @@
 {
   "name": "@gradecam/modgen",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Automatic module generator for AngularJS / Typescript -- automates DI",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
