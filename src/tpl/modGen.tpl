@@ -17,7 +17,7 @@ export default moduleName;
 const mod = ng.module(moduleName, [<%= (deps||[]).filter(d => !!d.angular).map(d => /\/module$/.test(d.file) ? `${d.__modname__}` : `(${d.__modname__} as any).default ?? ${d.__modname__}`).join(', ') %>]);
 
 <% print(modTpl) %>
-<% _.each(fileObjs, function(fobj) { if (fobj.$inject && fobj.$inject.length > 0) { %>(<%= fobj.regObj %>).$inject=[<%= fobj.$inject %>];
+<% _.each(fileObjs, function (fobj) { if (fobj.$inject && fobj.$inject.length > 0) { %>(<%= fobj.regObj %>.default ?? <%= fobj.regObj %>).$inject=[<%= fobj.$inject %>];
 <% } %><% }); %>
 <% if (_.filter(fileObjs, function(o) { return !!o.regObj; }).length) { %>mod<% _.each(fileObjs, function(fobj) { if (!fobj.regObj) { return; }
 switch(fobj.type) {
