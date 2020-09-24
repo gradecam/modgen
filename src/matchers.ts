@@ -14,7 +14,7 @@ export const reCommentAfter = /function[\s]*([\w]*)[\s]*\(([^]*?)\)(?:[\s]*{|[\s
  * 3. regName
  * 4. Injection string
  */
-export const reCommentBeforeFunction = /\/\/[\s]*(?:angular|ng)[\s]*(component|directive|(?:component|directive) controller|controller|service|factory|provider|config|filter)(?: *\[(\d+)\])?[\s]*(?:return[\s]*)?function[\s]*([\w]*)[\s]*\(([^]*?)\)[\s]*[:{]/m;
+export const reCommentBeforeFunction = /\/\/[\s]*(?:angular|ng)[\s]*(component|directive|(?:component|directive) controller|controller|service|factory|provider|config|filter)(?: *\[(\d+)\])?[\s]*(?:return[\s]+|export[\s]+default[\s]+)?function[\s]*([\w]*)[\s]*\(([^]*?)\)[\s]*[:{]/m;
 /**
  * 1. regName
  * 2. Type

@@ -141,7 +141,7 @@ function makeModule(mod: moduleDef, options?: ModGenOptions) {
         let functionPartMatches: RegExpExecArray;
         let parsedRegName: string;
         let injectionString: string;
-        if ((functionPartMatches = reCommentBeforeTS.exec(file))) {
+        if ((functionPartMatches = reCommentBeforeFunction.exec(file))) {
             ret.type = functionPartMatches[1];
             ret.order = functionPartMatches[2];
             parsedRegName = functionPartMatches[3];
@@ -151,7 +151,7 @@ function makeModule(mod: moduleDef, options?: ModGenOptions) {
             ret.type = functionPartMatches[2];
             ret.order = functionPartMatches[3];
             injectionString = functionPartMatches[4];
-        } else if ((functionPartMatches = reCommentBeforeFunction.exec(file))) {
+        } else if ((functionPartMatches = reCommentBeforeTS.exec(file))) {
             ret.type = functionPartMatches[1];
             ret.order = functionPartMatches[2];
             parsedRegName = functionPartMatches[3];
